@@ -4,19 +4,52 @@ const marketData = document.getElementById("market-data");
 const status = document.getElementById("status");
 
 const stockRows = {};
+// Market feed monitoring
+const FEED_TIMEOUT_MS = 5000;
+
+let lastTickTime = null;
+
+function updateConnectionStatus(message, connected) {
+    status.textContent = "● " + message;
+    status.classList.toggle("connected", connected);
+}
+
+// Check the market feed every second
+setInterval(() => {
+    if (!socket.connected) {
+        updateConnectionStatus("Server Disconnected", false);
+        return;
+    }
+
+    if (
+        lastTickTime === null ||
+        Date.now() - lastTickTime > FEED_TIMEOUT_MS
+    ) {
+        updateConnectionStatus("Market Feed Disconnected", false);
+    }
+}, 1000);
 
 socket.on("connect", () => {
-    status.textContent = "● Live Connected";
-    status.classList.add("connected");
+    lastTickTime = null;
+    updateConnectionStatus("Waiting for Market Data", false);
 });
 
 socket.on("disconnect", () => {
-    status.textContent = "● Disconnected";
-    status.classList.remove("connected");
+    lastTickTime = null;
+    updateConnectionStatus("Server Disconnected", false);
 });
 
 socket.on("price_update", (tick) => {
+    if (!socket.connected) {
+        return;
+    }
+
+    lastTickTime = Date.now();
+
+    updateConnectionStatus("Live Connected", true);
+
     const symbol = tick.symbol;
+
     updatePriceChart(tick);
     updateStatistics(tick);
 

@@ -133,7 +133,7 @@ int main()
 
     inet_pton(
         AF_INET,
-        "192.168.20.32",
+        "192.168.1.71",
         &serverAddress.sin_addr
     );
 
