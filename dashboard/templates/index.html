@@ -1,0 +1,138 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MarketStream Dashboard</title>
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<div class="container">
+
+    <header>
+        <div>
+            <h1>MarketStream</h1>
+            <p class="subtitle">
+                Real-Time Market Data Dashboard
+                (Simulated Prices)
+            </p>
+        </div>
+        <div id="status" class="status">
+            Connecting...
+        </div>
+    </header>
+
+    <section class="stock-grid">
+        <div class="stock-card">
+            <div class="stock-symbol">AAPL</div>
+            <div class="stock-price" id="price-AAPL">--</div>
+            <div id="change-AAPL">Waiting for data...</div>
+        </div>
+
+        <div class="stock-card">
+            <div class="stock-symbol">NVDA</div>
+            <div class="stock-price" id="price-NVDA">--</div>
+            <div id="change-NVDA">Waiting for data...</div>
+        </div>
+
+        <div class="stock-card">
+            <div class="stock-symbol">MSFT</div>
+            <div class="stock-price" id="price-MSFT">--</div>
+            <div id="change-MSFT">Waiting for data...</div>
+        </div>
+
+        <div class="stock-card">
+            <div class="stock-symbol">GOOG</div>
+            <div class="stock-price" id="price-GOOG">--</div>
+            <div id="change-GOOG">Waiting for data...</div>
+        </div>
+    </section>
+
+<section class="panel">
+    <h2>Live Price History</h2>
+
+<div class="chart-controls">
+    <label for="stockSelector">Select Stock:</label>
+
+    <select id="stockSelector">
+        <option value="ALL">All Stocks</option>
+        <option value="AAPL">AAPL - Apple</option>
+        <option value="NVDA">NVDA - NVIDIA</option>
+        <option value="MSFT">MSFT - Microsoft</option>
+        <option value="GOOG">GOOG - Alphabet</option>
+    </select>
+</div>
+
+    <p class="subtitle">
+        Streaming simulated market prices
+    </p>
+
+    <div class="chart-container">
+        <canvas id="priceChart"></canvas>
+    </div>
+</section>
+
+<section class="panel">
+    <h2>Market Statistics</h2>
+    <p class="subtitle">
+        Live statistics calculated by the C++ client
+    </p>
+
+    <div class="stock-grid">
+        <div class="stock-card">
+            <div class="stock-symbol">Average Price</div>
+            <div class="stock-price" id="stat-average">--</div>
+        </div>
+
+        <div class="stock-card">
+            <div class="stock-symbol">Minimum Price</div>
+            <div class="stock-price" id="stat-min">--</div>
+        </div>
+
+        <div class="stock-card">
+            <div class="stock-symbol">Maximum Price</div>
+            <div class="stock-price" id="stat-max">--</div>
+        </div>
+
+        <div class="stock-card">
+            <div class="stock-symbol">Ticks for Stock</div>
+            <div class="stock-price" id="stat-count">--</div>
+        </div>
+    </div>
+
+    <p>Total Processed Ticks: <strong id="stat-total">0</strong></p>
+    <p>Invalid Ticks: <strong id="stat-invalid">0</strong></p>
+    <p class="subtitle" id="stat-symbol">
+        Waiting for market data...
+    </p>
+</section>
+
+
+    <section class="panel">
+        <h2>Live Market Updates</h2>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Symbol</th>
+                    <th>Price</th>
+                    <th>Change</th>
+                    <th>Change %</th>
+                    <th>Last Updated</th>
+                </tr>
+            </thead>
+            <tbody id="market-data"></tbody>
+        </table>
+    </section>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+</body>
+</html>
+
+

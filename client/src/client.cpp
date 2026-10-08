@@ -3,12 +3,15 @@
 #include <sstream>
 #include <iomanip>
 #include <map>
+#include <nlohmann/json.hpp>
 
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <sys/socket.h>
 
 #define PORT 8080
+
+using json = nlohmann::json;
 
 struct PriceTick
 {
@@ -95,8 +98,18 @@ bool parseTick(const std::string& line, PriceTick& tick)
 }
 
 
-int main()
+int main(int argc, char* argv[])
 {
+    if (argc != 2)
+    {
+        std::cerr
+            << "Usage: " << argv[0]
+            << " <server-ip>\n";
+
+        return 1;
+    }
+
+    std::string serverIP = argv[1];
     // ---------------------------------------
     // 1. Create socket
     // ---------------------------------------
@@ -128,11 +141,19 @@ int main()
     serverAddress.sin_port = htons(PORT);
 
 
-    inet_pton(
+    if (inet_pton(
         AF_INET,
-        "192.168.1.71",
+        serverIP.c_str(),
         &serverAddress.sin_addr
-    );
+    ) != 1)
+{
+    std::cerr
+        << "Invalid IPv4 address: "
+        << serverIP << "\n";
+
+    close(clientSocket);
+    return 1;
+}
 
 
     // ---------------------------------------
@@ -145,7 +166,7 @@ int main()
         sizeof(serverAddress)
     ) < 0)
     {
-        std::cout << "Connection failed\n";
+        perror("Connection failed");
 
         close(clientSocket);
 
@@ -155,6 +176,40 @@ int main()
 
     std::cout
         << "Connected to server successfully!\n\n";
+     // Connect to the local Python dashboard bridge
+int dashboardSocket = socket(AF_INET, SOCK_STREAM, 0);
+
+if (dashboardSocket < 0)
+{
+    std::cerr << "Failed to create dashboard socket\n";
+}
+else
+{
+    sockaddr_in dashboardAddress{};
+    dashboardAddress.sin_family = AF_INET;
+    dashboardAddress.sin_port = htons(9090);
+
+    inet_pton(
+        AF_INET,
+        "127.0.0.1",
+        &dashboardAddress.sin_addr
+    );
+
+    if (connect(
+        dashboardSocket,
+        (sockaddr*)&dashboardAddress,
+        sizeof(dashboardAddress)
+    ) < 0)
+    {
+        perror("Dashboard bridge connection failed");
+        close(dashboardSocket);
+        dashboardSocket = -1;
+    }
+    else
+    {
+        std::cout << "Connected to dashboard bridge!\n";
+    }
+}
 
 
     // ---------------------------------------
@@ -279,6 +334,50 @@ int main()
 
                 stats.averagePrice =
                     stats.totalPrice / stats.count;
+
+                  // Prepare structured data for the dashboard
+                  json tickData = {
+   		     {"symbol", tick.symbol},
+   		     {"price", tick.price},
+   		     {"previousPrice", hasPreviousPrice ? previousPrice : 0.0},
+   		     {"hasPreviousPrice", hasPreviousPrice},
+   		     {"change", change},
+   		     {"changePercent", changePercent},
+   		     {"timestamp", tick.timestamp},
+   		     {"count", stats.count},
+   		     {"minPrice", stats.minPrice},
+   		     {"maxPrice", stats.maxPrice},
+   		     {"averagePrice", stats.averagePrice},
+   		     {"totalTicks", totalTicks},
+   		     {"invalidTicks", invalidTicks}
+		     };
+// Forward the processed tick to the dashboard
+if (dashboardSocket >= 0)
+{
+    std::string jsonMessage = tickData.dump() + "\n";
+
+    size_t totalSent = 0;
+
+    while (totalSent < jsonMessage.size())
+    {
+        ssize_t sent = send(
+            dashboardSocket,
+            jsonMessage.data() + totalSent,
+            jsonMessage.size() - totalSent,
+            MSG_NOSIGNAL
+        );
+
+        if (sent <= 0)
+        {
+            std::cerr << "Dashboard connection lost\n";
+            close(dashboardSocket);
+            dashboardSocket = -1;
+            break;
+        }
+
+        totalSent += static_cast<size_t>(sent);
+    }
+}
 
                 // ---------------------------------------
                 // Display statistics every 10 ticks
@@ -430,6 +529,11 @@ int main()
 
     std::cout
         << "\nServer disconnected.\n";
+
+if (dashboardSocket >= 0)
+{
+    close(dashboardSocket);
+}
 
 
     close(clientSocket);
