@@ -1,0 +1,32 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-Time Market Dashboard</title>
+</head>
+<body>
+    <h1>Real-Time Market Data Dashboard</h1>
+    <p>Data source: Simulated market prices</p>
+
+    <h3 id="status">Connecting...</h3>
+
+    <table border="1" cellpadding="10">
+        <thead>
+            <tr>
+                <th>Symbol</th>
+                <th>Price</th>
+                <th>Change</th>
+                <th>Change %</th>
+                <th>Last Updated</th>
+            </tr>
+        </thead>
+        <tbody id="market-data"></tbody>
+    </table>
+
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+</body>
+</html>
+
