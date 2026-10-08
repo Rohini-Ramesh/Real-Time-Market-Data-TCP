@@ -36,7 +36,17 @@ Flask Web Dashboard — Port 5000
     v
 Web Browser
 ```
+## Dashboard Preview
 
+### Live Market Dashboard
+
+![MarketStream Live Market Dashboard](docs/screenshots/marketstream-dashboard.png)
+
+### Market Data Visualization
+
+![MarketStream Market Data Visualization](docs/screenshots/marketstream-dashboard2.png)
+
+*MarketStream v1.1 — Simulated stock prices, interactive charts, market statistics, and connection monitoring.*
 ## Features
 
 ### C++ TCP Market Data Server
