@@ -98,8 +98,18 @@ bool parseTick(const std::string& line, PriceTick& tick)
 }
 
 
-int main()
+int main(int argc, char* argv[])
 {
+    if (argc != 2)
+    {
+        std::cerr
+            << "Usage: " << argv[0]
+            << " <server-ip>\n";
+
+        return 1;
+    }
+
+    std::string serverIP = argv[1];
     // ---------------------------------------
     // 1. Create socket
     // ---------------------------------------
@@ -131,11 +141,19 @@ int main()
     serverAddress.sin_port = htons(PORT);
 
 
-    inet_pton(
+    if (inet_pton(
         AF_INET,
-        "192.168.1.71",
+        serverIP.c_str(),
         &serverAddress.sin_addr
-    );
+    ) != 1)
+{
+    std::cerr
+        << "Invalid IPv4 address: "
+        << serverIP << "\n";
+
+    close(clientSocket);
+    return 1;
+}
 
 
     // ---------------------------------------
@@ -148,7 +166,7 @@ int main()
         sizeof(serverAddress)
     ) < 0)
     {
-        std::cout << "Connection failed\n";
+        perror("Connection failed");
 
         close(clientSocket);
 
